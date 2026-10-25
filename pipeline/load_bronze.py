@@ -33,7 +33,7 @@ TABLES = {
         "target": "raw.drivers",
         "columns": [
             "driver_id", "driver_name", "city", "vehicle_type",
-            "vehicle_number", "rating", "joined_date",
+            "vehicle_number", "rating", "joined_date", "updated_at",
         ],
     },
 }

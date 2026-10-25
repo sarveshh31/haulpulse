@@ -3,7 +3,13 @@
         materialized='incremental',
         unique_key='trip_id',
         incremental_strategy='delete+insert',
-        on_schema_change='append_new_columns'
+        on_schema_change='append_new_columns',
+        indexes=[
+            {'columns': ['trip_id'], 'unique': True},
+            {'columns': ['requested_at']},
+            {'columns': ['city_key', 'requested_at']},
+            {'columns': ['driver_key']}
+        ]
     )
 }}
 

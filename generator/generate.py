@@ -60,6 +60,7 @@ def generate_drivers(n: int, seed: int) -> pd.DataFrame:
             "vehicle_number": f"{cfg.CITIES[city]['plate']}{series}{number}",
             "rating": round(float(rng.uniform(3.2, 5.0)), 2),
             "joined_date": joined.isoformat(),
+            "updated_at": f"{joined.isoformat()} 00:00:00",
         })
     return pd.DataFrame(rows)
 

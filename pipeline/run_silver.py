@@ -133,8 +133,8 @@ def process_drivers(engine, source_file: str = "drivers.csv") -> int:
     with engine.connect() as conn:
         df = pd.read_sql(
             text(
-                "SELECT driver_id, driver_name, city, vehicle_type, vehicle_number, rating, joined_date "
-                "FROM raw.drivers WHERE source_file = :f ORDER BY row_num"
+                "SELECT driver_id, driver_name, city, vehicle_type, vehicle_number, rating, "
+                "joined_date, updated_at FROM raw.drivers WHERE source_file = :f ORDER BY row_num"
             ),
             conn, params={"f": source_file},
         )
@@ -147,6 +147,7 @@ def process_drivers(engine, source_file: str = "drivers.csv") -> int:
     vtype = df["vehicle_type"].map(lambda v: v.upper() if isinstance(v, str) else None)
     rating = pd.to_numeric(df["rating"], errors="coerce")
     joined = pd.to_datetime(df["joined_date"], format="%Y-%m-%d", errors="coerce")
+    updated = pd.to_datetime(df["updated_at"], format="%Y-%m-%d %H:%M:%S", errors="coerce")
 
     problems = {
         "missing driver_id": int(df["driver_id"].isna().sum()),
@@ -156,6 +157,7 @@ def process_drivers(engine, source_file: str = "drivers.csv") -> int:
         "invalid vehicle_type": int((~vtype.isin(ref.VALID_VEHICLE_TYPES)).sum()),
         "bad rating": int((rating.isna() | (rating < 0) | (rating > 5)).sum()),
         "bad joined_date": int(joined.isna().sum()),
+        "bad updated_at": int(updated.isna().sum()),
     }
     problems = {k: v for k, v in problems.items() if v}
     if problems:
@@ -165,7 +167,7 @@ def process_drivers(engine, source_file: str = "drivers.csv") -> int:
     out = pd.DataFrame({
         "driver_id": df["driver_id"], "driver_name": df["driver_name"], "city": city,
         "vehicle_type": vtype, "vehicle_number": df["vehicle_number"],
-        "rating": rating, "joined_date": joined.dt.date,
+        "rating": rating, "joined_date": joined.dt.date, "updated_at": updated,
     })
     cols = list(out.columns)
     rows = [tuple(_py(v) for v in r) for r in out.astype(object).itertuples(index=False, name=None)]
