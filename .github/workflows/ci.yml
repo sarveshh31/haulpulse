@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  unit-tests:
+    name: Lint and unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Lint (ruff)
+        run: ruff check .
+      - name: Unit tests with coverage
+        run: pytest --cov=pipeline.validate --cov-report=term-missing
+
+  pipeline-e2e:
+    name: End-to-end pipeline on PostgreSQL
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: haulpulse
+          POSTGRES_PASSWORD: ci_password
+          POSTGRES_DB: haulpulse
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U haulpulse -d haulpulse"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      POSTGRES_USER: haulpulse
+      POSTGRES_PASSWORD: ci_password
+      POSTGRES_DB: haulpulse
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5433"
+      DBT_PROFILES_DIR: ${{ github.workspace }}/dbt_project
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create schemas
+        run: psql -h localhost -p 5433 -U haulpulse -d haulpulse -f sql/init/01_schemas.sql
+        env:
+          PGPASSWORD: ci_password
+
+      - name: Create tables
+        run: python -m pipeline.bootstrap
+
+      - name: Generate 3 days of synthetic data
+        run: python -m generator.generate --start-date 2026-10-19 --days 3 --rows 2000
+
+      - name: Bronze load
+        run: python -m pipeline.load_bronze
+
+      - name: Silver validation
+        run: python -m pipeline.run_silver
+
+      - name: Reconcile detected vs injected defects
+        run: python -m pipeline.reconcile
+
+      - name: dbt seed, snapshot, run, test
+        working-directory: dbt_project
+        run: |
+          dbt seed
+          dbt snapshot
+          dbt run
+          dbt test

@@ -41,10 +41,23 @@ if daily.empty:
     st.stop()
 
 daily["trip_date"] = pd.to_datetime(daily["trip_date"])
-min_d, max_d = daily["trip_date"].min().date(), daily["trip_date"].max().date()
+
+# Boundary days can hold only late-arriving corrections (e.g. the first day of a backfill)
+day_totals = daily.groupby("trip_date")["total_trips"].sum()
+partial_days = day_totals[day_totals < 0.5 * day_totals.median()].index
 
 with st.sidebar:
     st.header("Filters")
+    hide_partial = False
+    if len(partial_days):
+        hide_partial = st.checkbox(
+            f"Hide {len(partial_days)} partial day(s)", value=True,
+            help="Days with under half the typical volume, usually boundary days "
+                 "holding only late-arriving corrections.",
+        )
+    if hide_partial:
+        daily = daily[~daily["trip_date"].isin(partial_days)]
+    min_d, max_d = daily["trip_date"].min().date(), daily["trip_date"].max().date()
     picked = st.date_input("Date range", value=(min_d, max_d), min_value=min_d, max_value=max_d)
     all_cities = sorted(daily["city"].unique())
     chosen = st.multiselect("Cities", all_cities, default=all_cities)
@@ -126,8 +139,9 @@ a.plotly_chart(
     use_container_width=True,
 )
 fig_ot = px.bar(by_city.sort_values("on_time_rate"), x="on_time_rate", y="city", orientation="h",
-                title="On-time rate by city", labels={"on_time_rate": "On-time rate", "city": ""})
-fig_ot.update_xaxes(tickformat=".0%", range=[max(0, by_city["on_time_rate"].min() - 0.05), 1])
+                title="On-time rate by city", labels={"on_time_rate": "On-time rate", "city": ""},
+                text_auto=".1%")
+fig_ot.update_xaxes(tickformat=".0%", range=[0, 1])
 b.plotly_chart(fig_ot, use_container_width=True)
 
 # ---- sidebar footer: last pipeline run ----
