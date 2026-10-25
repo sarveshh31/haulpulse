@@ -6,5 +6,6 @@ select
     vehicle_number,
     rating,
     joined_date,
+    updated_at,
     loaded_at
 from {{ source('silver', 'drivers_clean') }}

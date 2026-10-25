@@ -41,11 +41,14 @@ models:
         data_tests: [unique, not_null]
 
   - name: dim_driver
+    description: SCD Type 2 - one row per driver per version (city / vehicle changes)
     columns:
       - name: driver_key
         data_tests: [unique, not_null]
       - name: driver_id
-        data_tests: [unique, not_null]
+        data_tests: [not_null]
+      - name: is_current
+        data_tests: [not_null]
 
   - name: fact_trips
     description: One row per validated trip (incremental, keyed on trip_id)
@@ -94,7 +97,7 @@ models:
 
   - name: mart_driver_performance
     columns:
-      - name: driver_key
+      - name: driver_id
         data_tests: [unique, not_null]
 
   - name: mart_city_demand_hourly

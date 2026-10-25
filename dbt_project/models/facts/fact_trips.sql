@@ -55,4 +55,7 @@ select
 from trips t
 left join {{ ref('dim_city') }}    c on t.city = c.city
 left join {{ ref('dim_vehicle') }} v on t.vehicle_type = v.vehicle_type
-left join {{ ref('dim_driver') }}  d on t.driver_id = d.driver_id
+left join {{ ref('dim_driver') }}  d
+       on t.driver_id    = d.driver_id
+      and t.requested_at >= d.valid_from
+      and t.requested_at <  d.valid_to
