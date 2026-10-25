@@ -83,7 +83,7 @@ models:
       - name: payment_mode
         data_tests:
           - accepted_values:
-              values: ['UPI', 'CASH', 'WALLET', 'CARD']
+              values: ['UPI', 'CASH', 'WALLET','CARD']
 
   - name: mart_daily_kpis
     columns:
