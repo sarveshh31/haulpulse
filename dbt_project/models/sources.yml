@@ -1,0 +1,19 @@
+version: 2
+
+sources:
+  - name: silver
+    schema: staging
+    description: Validated and typed data produced by the Python validation layer
+    tables:
+      - name: trips_clean
+        columns:
+          - name: trip_id
+            data_tests:
+              - unique
+              - not_null
+      - name: drivers_clean
+        columns:
+          - name: driver_id
+            data_tests:
+              - unique
+              - not_null

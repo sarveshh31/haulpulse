@@ -1,0 +1,32 @@
+select
+    trip_id,
+    customer_id,
+    driver_id,
+    city,
+    vehicle_type,
+    pickup_lat,
+    pickup_lng,
+    drop_lat,
+    drop_lng,
+    distance_km,
+    eta_minutes,
+    requested_at,
+    pickup_at,
+    delivered_at,
+    status,
+    fare_amount,
+    payment_mode,
+    cancellation_reason,
+    updated_at,
+    source_file,
+    loaded_at,
+
+    -- derived fields
+    requested_at::date                                              as trip_date,
+    extract(hour from requested_at)::int                            as request_hour,
+    status = 'COMPLETED'                                            as is_completed,
+    status in ('CANCELLED_BY_CUSTOMER', 'CANCELLED_BY_DRIVER')      as is_cancelled,
+    status = 'NO_DRIVER_FOUND'                                      as is_no_driver,
+    round(extract(epoch from (pickup_at - requested_at)) / 60.0, 1) as wait_minutes,
+    round(extract(epoch from (delivered_at - pickup_at)) / 60.0, 1) as trip_duration_minutes
+from {{ source('silver', 'trips_clean') }}

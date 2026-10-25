@@ -1,0 +1,105 @@
+version: 2
+
+seeds:
+  - name: city_reference
+    columns:
+      - name: city
+        data_tests: [unique, not_null]
+  - name: vehicle_reference
+    columns:
+      - name: vehicle_type
+        data_tests: [unique, not_null]
+
+models:
+  - name: stg_trips
+    columns:
+      - name: trip_id
+        data_tests: [unique, not_null]
+
+  - name: stg_drivers
+    columns:
+      - name: driver_id
+        data_tests: [unique, not_null]
+
+  - name: dim_city
+    columns:
+      - name: city_key
+        data_tests: [unique, not_null]
+      - name: city
+        data_tests: [unique, not_null]
+
+  - name: dim_vehicle
+    columns:
+      - name: vehicle_key
+        data_tests: [unique, not_null]
+      - name: vehicle_type
+        data_tests: [unique, not_null]
+
+  - name: dim_date
+    columns:
+      - name: date_key
+        data_tests: [unique, not_null]
+
+  - name: dim_driver
+    columns:
+      - name: driver_key
+        data_tests: [unique, not_null]
+      - name: driver_id
+        data_tests: [unique, not_null]
+
+  - name: fact_trips
+    description: One row per validated trip (incremental, keyed on trip_id)
+    columns:
+      - name: trip_id
+        data_tests: [unique, not_null]
+      - name: date_key
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: city_key
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_city')
+              field: city_key
+      - name: vehicle_key
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_vehicle')
+              field: vehicle_key
+      - name: driver_key
+        description: Null only for NO_DRIVER_FOUND trips
+        data_tests:
+          - relationships:
+              to: ref('dim_driver')
+              field: driver_key
+      - name: status
+        data_tests:
+          - accepted_values:
+              values: ['COMPLETED', 'CANCELLED_BY_CUSTOMER', 'CANCELLED_BY_DRIVER', 'NO_DRIVER_FOUND']
+      - name: payment_mode
+        data_tests:
+          - accepted_values:
+              values: ['UPI', 'CASH', 'WALLET', 'CARD']
+
+  - name: mart_daily_kpis
+    columns:
+      - name: trip_date
+        data_tests: [not_null]
+      - name: city
+        data_tests: [not_null]
+
+  - name: mart_driver_performance
+    columns:
+      - name: driver_key
+        data_tests: [unique, not_null]
+
+  - name: mart_city_demand_hourly
+    columns:
+      - name: city
+        data_tests: [not_null]
+      - name: hour_of_day
+        data_tests: [not_null]

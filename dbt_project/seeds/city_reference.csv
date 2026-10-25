@@ -1,0 +1,11 @@
+city,state,region,tier
+Mumbai,Maharashtra,West,Tier-1
+Delhi,Delhi,North,Tier-1
+Bengaluru,Karnataka,South,Tier-1
+Hyderabad,Telangana,South,Tier-1
+Chennai,Tamil Nadu,South,Tier-1
+Pune,Maharashtra,West,Tier-1
+Kolkata,West Bengal,East,Tier-1
+Ahmedabad,Gujarat,West,Tier-1
+Jaipur,Rajasthan,North,Tier-2
+Nagpur,Maharashtra,Central,Tier-2

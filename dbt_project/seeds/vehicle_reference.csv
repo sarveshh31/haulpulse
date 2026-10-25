@@ -1,0 +1,5 @@
+vehicle_type,vehicle_label,capacity_kg
+TWO_WHEELER,Bike,20
+THREE_WHEELER,Cargo Auto,500
+MINI_TRUCK,Mini Truck,1000
+TEMPO,Tempo,2000
